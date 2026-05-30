@@ -1,0 +1,42 @@
+#!/bin/bash
+# numsan - Numerical Sanitizer wrapper
+# Usage: numsan <source.c> [-o output]
+
+set -e  # exit on any error
+
+# Paths to your LLVM build
+OPT=~/cdel/llvm-project/build/bin/opt
+CLANG=~/cdel/llvm-project/build/bin/clang
+PASS=~/cdel/NumSanitizer/build/NumericalPass.so
+RUNTIME=~/cdel/NumSanitizer/numsan_rt.c
+
+# Parse arguments
+SOURCE=$1
+OUTPUT=${3:-a.out}   # default output name is a.out
+
+if [ -z "$SOURCE" ]; then
+    echo "Usage: numsan <source.c> [-o output]"
+    exit 1
+fi
+
+BASENAME=$(basename "$SOURCE" .c)
+TMPDIR=$(mktemp -d)
+
+echo "[numsan] Compiling $SOURCE..."
+
+# Step 1 - compile to IR
+$CLANG -S -emit-llvm -O1 "$SOURCE" -o "$TMPDIR/$BASENAME.ll"
+
+# Step 2 - instrument with pass
+$OPT -load-pass-plugin "$PASS" \
+     -passes="function(numsan)" \
+     "$TMPDIR/$BASENAME.ll" \
+     -o "$TMPDIR/$BASENAME.bc" 2>/dev/null
+
+# Step 3 - link with runtime
+$CLANG "$TMPDIR/$BASENAME.bc" "$RUNTIME" -o "$OUTPUT" -lm
+
+echo "[numsan] Done. Run: ./$OUTPUT"
+
+# Cleanup
+rm -rf "$TMPDIR"

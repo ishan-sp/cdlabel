@@ -61,13 +61,6 @@ Severity labels:
 
 Key insight: Lower thresholds detect smaller precision loss but can flood results in long-running loops. The current threshold is tuned to highlight meaningful drift without overwhelming short programs.
 
-## Limitations and Future Work
-
-- Float-only instrumentation: double and vector operations are not checked. Fix: add type coverage and vector lane tracking.
-- No explicit overflow/underflow detection: cases like `norm = inf` can occur without warnings. Fix: add explicit checks for `isinf`/`isnan` after ops.
-- No severity stratification beyond count: warnings are not categorized by magnitude. Fix: bucket relative error into severity bands.
-- Optimization sensitivity: higher `-O` levels can constant-fold away target ops. Fix: optionally insert `volatile` barriers or re-run on IR after optimizations.
-
 ## Details
 
 Each section shows warning samples and the first few lines of program output.
@@ -329,4 +322,11 @@ Program output (first 5 lines):
 ```text
 norm = inf
 ```
+
+## Limitations and Future Work
+
+- Float-only instrumentation: double and vector operations are not checked. Fix: add type coverage and vector lane tracking.
+- No explicit overflow/underflow detection: cases like `norm = inf` can occur without warnings. Fix: add explicit checks for `isinf`/`isnan` after ops.
+- No severity stratification beyond count: warnings are not categorized by magnitude. Fix: bucket relative error into severity bands.
+- Optimization sensitivity: higher `-O` levels can constant-fold away target ops. Fix: optionally insert `volatile` barriers or re-run on IR after optimizations.
 

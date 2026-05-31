@@ -25,7 +25,7 @@ TMPDIR=$(mktemp -d)
 echo "[numsan] Compiling $SOURCE..."
 
 # Step 1 - compile to IR
-$CLANG -S -emit-llvm -O1 "$SOURCE" -o "$TMPDIR/$BASENAME.ll"
+$CLANG -S -emit-llvm -O0 -g "$SOURCE" -o "$TMPDIR/$BASENAME.ll"
 
 # Step 2 - instrument with pass
 $OPT -load-pass-plugin "$PASS" \

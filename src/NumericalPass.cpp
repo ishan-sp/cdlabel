@@ -16,13 +16,14 @@ struct NumericalPass : public PassInfoMixin<NumericalPass> {
         LLVMContext &Ctx = F.getContext();
         Module *M = F.getParent();
 
-        // Declare __numsan_check(float, double) in the IR
+        // Declare __numsan_check(float, double, int) in the IR
         // This tells LLVM "this function exists, it'll be linked in later"
         FunctionCallee CheckFn = M->getOrInsertFunction(
             "__numsan_check",
             Type::getVoidTy(Ctx),      // return type: void
             Type::getFloatTy(Ctx),     // arg 1: float (actual result)
-            Type::getDoubleTy(Ctx)     // arg 2: double (shadow result)
+            Type::getDoubleTy(Ctx),    // arg 2: double (shadow result)
+            Type::getInt32Ty(Ctx)      // arg 3: source line number
         );
 
         // Collect instructions first - never modify a list while iterating it
@@ -64,8 +65,13 @@ struct NumericalPass : public PassInfoMixin<NumericalPass> {
                     break;
             }
 
-            // Step 3: Call __numsan_check(float_result, double_shadow)
-            Builder.CreateCall(CheckFn, {I, res_shadow});
+            // Step 3: Call __numsan_check(float_result, double_shadow, line)
+            unsigned line = 0;
+            if (DILocation *Loc = I->getDebugLoc()) {
+                line = Loc->getLine();
+            }
+            Value *lineVal = Builder.getInt32(static_cast<int>(line));
+            Builder.CreateCall(CheckFn, {I, res_shadow, lineVal});
 
             errs() << "Instrumented: " << *I << "\n";
         }

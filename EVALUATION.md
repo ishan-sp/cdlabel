@@ -40,6 +40,34 @@ Severity labels:
 - `test_vector_norm` reports `inf` without warnings, showing overflow can occur even when the relative-difference heuristic does not trigger.
 - Most single-operation cases (multiply, exchange rate, quadratic) produce isolated warnings, consistent with localized cancellation or scaling error.
 
+## Summary Table (Project-Specific)
+
+| Test Case | Warnings | Severity | Dominant Pattern | Notes |
+| --- | --- | --- | --- | --- |
+| test_path_sum | 999998 | High | Accumulation | Long loop of small increments |
+| test_interest_compound | 19750 | High | Accumulation | Repeated compounding step |
+| test_multiply | 2 | Low | Scaling | Large * near-1 factor |
+| test_exchange_rate | 1 | Low | Scaling | Large multiply conversion |
+| test_quadratic | 1 | Low | Cancellation | Naive quadratic formula |
+| test_vector_norm | 0 | None | Overflow | Output becomes inf |
+
+## Trade-offs: Sensitivity vs Noise
+
+| Threshold | Sensitivity | Warning Volume | False-Positive Risk |
+| --- | --- | --- | --- |
+| 1e-7 | Low | Low | Low |
+| 1e-9 (ours) | Moderate | Medium | Medium |
+| 1e-12 | High | High | High |
+
+Key insight: Lower thresholds detect smaller precision loss but can flood results in long-running loops. The current threshold is tuned to highlight meaningful drift without overwhelming short programs.
+
+## Limitations and Future Work
+
+- Float-only instrumentation: double and vector operations are not checked. Fix: add type coverage and vector lane tracking.
+- No explicit overflow/underflow detection: cases like `norm = inf` can occur without warnings. Fix: add explicit checks for `isinf`/`isnan` after ops.
+- No severity stratification beyond count: warnings are not categorized by magnitude. Fix: bucket relative error into severity bands.
+- Optimization sensitivity: higher `-O` levels can constant-fold away target ops. Fix: optionally insert `volatile` barriers or re-run on IR after optimizations.
+
 ## Details
 
 Each section shows warning samples and the first few lines of program output.

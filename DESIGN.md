@@ -15,17 +15,33 @@ The Numerical Sanitizer breaks into four sub-problems:
 
 ```mermaid
 flowchart LR
-	A[User C code] --> B[CLI: bin/numsan]
-	B --> C[clang: emit LLVM IR]
-	C --> D[opt: NumericalPass.so]
-	D --> E[clang: link numsan_rt.c]
-	E --> F[Instrumented binary]
-	F --> G[Runtime warnings + stdout]
-	G --> H[FastAPI /api/numsan]
-	H --> I[React UI]
+	subgraph UI[Frontend]
+		UIE[Code editor]
+		UIW[Warnings list]
+		UIO[Output panel]
+	end
 
-	J[UI Editor] --> I
-	I --> H
+	subgraph API[Backend]
+		APIF[FastAPI /api/numsan]
+		PARSE[Parse warnings]
+		TMP[Temp source file]
+	end
+
+	subgraph COMP[Compilation Pipeline]
+		WRAP[bin/numsan]
+		C1[clang -S -emit-llvm -g -O0]
+		OPT[opt + NumericalPass.so]
+		LINK[clang + numsan_rt.c]
+		BIN[Instrumented binary]
+	end
+
+	UIE --> APIF
+	APIF --> TMP
+	TMP --> WRAP
+	WRAP --> C1 --> OPT --> LINK --> BIN
+	BIN --> PARSE --> APIF
+	APIF --> UIW
+	APIF --> UIO
 ```
 
 ---

@@ -5,10 +5,10 @@
 set -e  # exit on any error
 
 # Paths to your LLVM build
-OPT=~/cdel/llvm-project/build/bin/opt
-CLANG=~/cdel/llvm-project/build/bin/clang
-PASS=~/cdel/NumSanitizer/build/NumericalPass.so
-RUNTIME=~/cdel/NumSanitizer/numsan_rt.c
+OPT=~/llvm-project/build/bin/opt
+CLANG=~/llvm-project/build/bin/clang
+PASS=~/cdlabel/build/NumericalPass.so
+RUNTIME=~/cdlabel/src/numsan_rt.c
 
 # Parse arguments
 SOURCE=$1

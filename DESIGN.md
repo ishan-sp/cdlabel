@@ -11,6 +11,23 @@ The Numerical Sanitizer breaks into four sub-problems:
 4. UI/UX             - Edit code, run, show warnings + output
 ```
 
+## Architecture Diagram
+
+```mermaid
+flowchart LR
+	A[User C code] --> B[CLI: bin/numsan]
+	B --> C[clang: emit LLVM IR]
+	C --> D[opt: NumericalPass.so]
+	D --> E[clang: link numsan_rt.c]
+	E --> F[Instrumented binary]
+	F --> G[Runtime warnings + stdout]
+	G --> H[FastAPI /api/numsan]
+	H --> I[React UI]
+
+	J[UI Editor] --> I
+	I --> H
+```
+
 ---
 
 ## Design Decisions
